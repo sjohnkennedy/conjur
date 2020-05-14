@@ -8,21 +8,46 @@ module Authentication
     # Possible Errors Raised:
     # CSRIsMissingSpiffeId, CertInstallationError
 
+    class InjectClientCertAuditInput < ::Dry::Struct
+      attribute :service_id, ::Types::NonEmptyString.optional
+      attribute :account, ::Types::NonEmptyString
+      attribute :role, ::Types::Any
+
+      def authenticator_name
+        'authn-k8s'
+      end
+
+      def webservice
+        @webservice ||= ::Authentication::Webservice.new(
+          account:            @account,
+          authenticator_name: authenticator_name,
+          service_id:         @service_id
+        )
+      end
+    end
+
     InjectClientCert ||= CommandClass.new(
       dependencies: {
-        logger: Rails.logger,
-        resource_class: Resource,
-        conjur_ca_repo: Repos::ConjurCA,
-        kubectl_exec: KubectlExec,
-        validate_pod_request: ValidatePodRequest.new
+        logger:                 Rails.logger,
+        resource_class:         Resource,
+        conjur_ca_repo:         Repos::ConjurCA,
+        kubectl_exec:           KubectlExec,
+        validate_pod_request:   ValidatePodRequest.new,
+        audit_log:              ::Authentication::AuditLog.new,
+        audit_event:            AuditEvent::InjectClientCert
       },
       inputs: %i(conjur_account service_id csr host_id_prefix)
     ) do
 
+      # :reek:TooManyStatements
       def call
         update_csr_common_name
         validate
         install_signed_cert
+        audit_success
+      rescue => e
+        audit_failure(e)
+        raise e
       end
 
       private
@@ -171,6 +196,33 @@ module Authentication
         annotation_name = "authentication-container-name"
         annotation = host.annotations.find { |a| a.values[:name] == "#{prefix}/#{annotation_name}" }
         annotation ? annotation[:value] : nil
+      end
+
+      def audit_success
+        @audit_log.(
+          event: @audit_event,
+          authenticator_input: audit_input,
+          success: true,
+          message: nil
+        )
+      end
+
+      def audit_failure(err)
+        @audit_log.(
+          event: @audit_event,
+          authenticator_input: audit_input,
+          success: false,
+          message: err.message
+        )
+      end
+
+      # :reek:NilCheck
+      def audit_input
+        @audit_input ||= InjectClientCertAuditInput.new(
+          account: @conjur_account,
+          service_id: @service_id,
+          role: host
+        )
       end
     end
   end
