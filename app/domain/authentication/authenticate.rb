@@ -14,7 +14,8 @@ module Authentication
       token_factory:          TokenFactory.new,
       validate_security:      ::Authentication::Security::ValidateSecurity.new,
       validate_origin:        ::Authentication::ValidateOrigin.new,
-      audit_event:            ::Authentication::AuditEvent.new
+      audit_log:              ::Authentication::AuditLog.new,
+      audit_event:            ::Authentication::AuditEvent::Authenticate
     },
     inputs:       %i(authenticator_input authenticators enabled_authenticators)
   ) do
@@ -59,18 +60,20 @@ module Authentication
     end
 
     def audit_success
-      @audit_event.(
+      @audit_log.(
+        event: @audit_event,
         authenticator_input: @authenticator_input,
-          success: true,
-          message: nil
+        success: true,
+        message: nil
       )
     end
 
     def audit_failure(err)
-      @audit_event.(
+      @audit_log.(
+        event: @audit_event,
         authenticator_input: @authenticator_input,
-          success: false,
-          message: err.message
+        success: false,
+        message: err.message
       )
     end
 

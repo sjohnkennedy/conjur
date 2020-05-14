@@ -22,7 +22,8 @@ module Authentication
         validate_account_exists:     ::Authentication::Security::ValidateAccountExists.new,
         validate_security:           ::Authentication::Security::ValidateSecurity.new,
         validate_origin:             ValidateOrigin.new,
-        audit_event:                 AuditEvent.new,
+        audit_log:                   ::Authentication::AuditLog.new,
+        audit_event:                 ::Authentication::AuditEvent::Authenticate,
         verify_and_decode_token:     ::Authentication::OAuth::VerifyAndDecodeToken.new,
         logger:                      Rails.logger
       },
@@ -131,18 +132,20 @@ module Authentication
       end
 
       def audit_success
-        @audit_event.(
+        @audit_log.(
+          event: @audit_event,
           authenticator_input: @authenticator_input,
-            success: true,
-            message: nil
+          success: true,
+          message: nil
         )
       end
 
       def audit_failure(err)
-        @audit_event.(
+        @audit_log.(
+          event: @audit_event,
           authenticator_input: @authenticator_input,
-            success: false,
-            message: err.message
+          success: false,
+          message: err.message
         )
       end
 
