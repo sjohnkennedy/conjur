@@ -28,8 +28,9 @@ Rails.application.configure do
   # Apache or NGINX already handles this.
   config.public_file_server.enabled = ENV['RAILS_SERVE_STATIC_FILES'].present?
 
-  # Use log level "warn" in prod to avoid logging parameters.
-  config.log_level = ENV['CONJUR_LOG_LEVEL'] || :info
+  # we log our log messages (CONJ) in INFO to split them from the DB messages that
+  # are written in DEBUG. Thus, the default value should be 'warn'
+  config.log_level = ENV['CONJUR_LOG_LEVEL'] || :warn
   config.log_formatter = ConjurFormatter.new
 
   # Specifies the header that your server uses for sending files.
