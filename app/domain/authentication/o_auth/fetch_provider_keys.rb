@@ -40,7 +40,7 @@ module Authentication
           keys: @discovered_provider.jwks
         }
         algs = @discovered_provider.id_token_signing_alg_values_supported
-        @logger.debug(Log::FetchProviderKeysSuccess.new)
+        @logger.info(Log::FetchProviderKeysSuccess.new)
         ProviderKeys.new(jwks, algs)
       rescue => e
         raise Err::FetchProviderKeysFailed.new(@provider_uri, e.inspect)

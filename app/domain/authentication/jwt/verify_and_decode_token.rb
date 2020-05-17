@@ -43,12 +43,12 @@ module Authentication
           should_verify,
           @verification_options
         ).first.tap do
-          @logger.debug(Log::TokenDecodeSuccess.new)
+          @logger.info(Log::TokenDecodeSuccess.new)
         end
       rescue JWT::ExpiredSignature
         raise Err::TokenExpired
       rescue JWT::DecodeError => e
-        @logger.debug(Log::TokenDecodeFailed.new(e.inspect))
+        @logger.info(Log::TokenDecodeFailed.new(e.inspect))
         raise Err::TokenDecodeFailed, e.inspect
       rescue => e
         raise Err::TokenVerificationFailed, e.inspect

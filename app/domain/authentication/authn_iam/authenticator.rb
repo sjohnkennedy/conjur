@@ -24,7 +24,7 @@ module Authentication
       end
 
       def identity_hash(response)
-        Rails.logger.debug("AWS IAM get_caller_identity body\n#{response.body} ")
+        Rails.logger.info("AWS IAM get_caller_identity body\n#{response.body} ")
 
         if response.code < 300
           Hash.from_xml(response.body)
@@ -44,17 +44,17 @@ module Authentication
         aws_user_id = response_hash["GetCallerIdentityResponse"]["GetCallerIdentityResult"]["UserId"]
         host_to_match = "#{host_prefix}/#{aws_account_id}/#{aws_role_name}"
 
-        Rails.logger.debug("IAM Role authentication attempt by AWS user #{aws_user_id} with host to match = #{host_to_match}")
+        Rails.logger.info("IAM Role authentication attempt by AWS user #{aws_user_id} with host to match = #{host_to_match}")
 
         login.eql? host_to_match
       end
 
       def aws_signed_url
-        return 'https://sts.amazonaws.com/?Action=GetCallerIdentity&Version=2011-06-15'      
+        return 'https://sts.amazonaws.com/?Action=GetCallerIdentity&Version=2011-06-15'
       end
 
       def response_from_signed_request(aws_headers)
-        Rails.logger.debug("Retrieving IAM identity")
+        Rails.logger.info("Retrieving IAM identity")
         begin
           RestClient.get(aws_signed_url, headers = aws_headers)
         rescue RestClient::ExceptionWithResponse => e

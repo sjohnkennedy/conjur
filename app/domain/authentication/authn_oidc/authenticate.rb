@@ -103,7 +103,7 @@ module Authentication
       def validate_conjur_username
         raise Err::IdTokenFieldNotFoundOrEmpty, id_token_username_field if conjur_username.to_s.empty?
         raise Err::AdminAuthenticationDenied if admin?(conjur_username)
-        @logger.debug(Log::ExtractedUsernameFromIDToked.new(conjur_username, id_token_username_field))
+        @logger.info(Log::ExtractedUsernameFromIDToked.new(conjur_username, id_token_username_field))
       end
 
       def conjur_username
@@ -122,12 +122,12 @@ module Authentication
             enabled_authenticators: @enabled_authenticators
         )
 
-        @logger.debug(LogMessages::Authentication::Security::SecurityValidated.new.to_s)
+        @logger.info(LogMessages::Authentication::Security::SecurityValidated.new.to_s)
       end
 
       def validate_origin
         @validate_origin.(input: @authenticator_input)
-        @logger.debug(LogMessages::Authentication::OriginValidated.new.to_s)
+        @logger.info(LogMessages::Authentication::OriginValidated.new.to_s)
       end
 
       def audit_success

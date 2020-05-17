@@ -59,7 +59,7 @@ module Authentication
         else
           @token_identity[:system_assigned_identity] = @oid_token_field
         end
-        @logger.debug(Log::ExtractedApplicationIdentityFromToken.new)
+        @logger.info(Log::ExtractedApplicationIdentityFromToken.new)
       end
 
       def validate_azure_annotations_are_permitted
@@ -111,7 +111,7 @@ module Authentication
             raise Err::InvalidApplicationIdentity, annotation_type_constraint(annotation_type)
           end
         end
-        @logger.debug(Log::ValidatedApplicationIdentity.new)
+        @logger.info(Log::ValidatedApplicationIdentity.new)
       end
 
       def annotation_type_constraints constraints

@@ -57,7 +57,7 @@ module Authentication
       end
 
       def default_authentication_container_name
-        Rails.logger.debug(
+        Rails.logger.info(
           LogMessages::Authentication::ContainerNameAnnotationDefaultValue.new(
             AUTHENTICATION_CONTAINER_NAME_ANNOTATION,
             DEFAULT_AUTHENTICATION_CONTAINER_NAME
@@ -119,7 +119,7 @@ module Authentication
 
         # return the value of the annotation if it exists, nil otherwise
         if annotation
-          Rails.logger.debug(LogMessages::Authentication::RetrievedAnnotationValue.new(name))
+          Rails.logger.info(LogMessages::Authentication::RetrievedAnnotationValue.new(name))
           annotation[:value]
         end
       end
@@ -144,7 +144,7 @@ module Authentication
       end
 
       def validate_prefixed_permitted_annotations prefix
-        Rails.logger.debug(LogMessages::Authentication::ValidatingAnnotationsWithPrefix.new(prefix))
+        Rails.logger.info(LogMessages::Authentication::ValidatingAnnotationsWithPrefix.new(prefix))
 
         prefixed_k8s_annotations(prefix).each do |annotation|
           annotation_name = annotation[:name]
@@ -178,7 +178,7 @@ module Authentication
       end
 
       def validate_host_id
-        Rails.logger.debug(Log::ValidatingHostId.new(@host_id))
+        Rails.logger.info(Log::ValidatingHostId.new(@host_id))
 
         valid_host_id = host_id_suffix.length == 3
         raise Err::InvalidHostId, @host_id unless valid_host_id
