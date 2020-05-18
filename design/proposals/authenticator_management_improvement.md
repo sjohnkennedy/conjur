@@ -6,37 +6,35 @@
     - [Add Authenticator](#add-authenticator)
       - [Functionality](#functionality)
       - [Synopsis](#synopsis)
-      - [Example](#example)
+      - [Usage Example](#usage-example)
+      - [API Specification](#api-specification)
     - [Delete Authenticator](#delete-authenticator)
       - [Functionality](#functionality-1)
       - [Synopsis](#synopsis-1)
-      - [Example](#example-1)
+      - [Usage Example](#usage-example-1)
+      - [API Specification](#api-specification-1)
     - [Update Authenticator](#update-authenticator)
       - [Functionality](#functionality-2)
       - [Synopsis](#synopsis-2)
-      - [Example](#example-2)
+      - [Usage Example](#usage-example-2)
+      - [API Specification](#api-specification-2)
     - [Enable Authenticator](#enable-authenticator)
       - [Functionality](#functionality-3)
       - [Synopsis](#synopsis-3)
-      - [Example](#example-3)
+      - [Usage Example](#usage-example-3)
+      - [API Specification](#api-specification-3)
     - [Disable Authenticator](#disable-authenticator)
       - [Functionality](#functionality-4)
       - [Synopsis](#synopsis-4)
-      - [Example](#example-4)
+      - [Usage Example](#usage-example-4)
+      - [API Specification](#api-specification-4)
+  - [Implementation Details](#implementation-details)
   - [Backwards Compatibility](#backwards-compatibility)
   - [Performance](#performance)
   - [Security](#security)
   - [Documentation](#documentation)
-  - [Implementation Options](#implementation-options)
-    - [Alternative 1 - Server Side](#alternative-1---server-side)
-      - [Pros](#pros)
-      - [Cons](#cons)
-    - [Alternative 2 - CLI Side](#alternative-2---cli-side)
-      - [Pros](#pros-1)
-      - [Cons](#cons-1)
   - [Version Update](#version-update)
   - [Delivery Plan](#delivery-plan)
-  - [Recommendation](#recommendation)
   
 ## Introduction
 
@@ -53,7 +51,7 @@ Currently to define an authenticator, the user needs to complete the following s
 To delete an authenticator, the user needs to complete these steps.  
 Either:
 
-- Create a policy with a `- !delete` statement, on the authenticator policy
+- Create a policy with a `!delete` statement, on the authenticator policy
 - Load the policy using Conjur CLI
 
 Or:
@@ -77,11 +75,33 @@ Defines a new authenticator in Conjur. Behind the scenes, this command will crea
 
 conjur config authenticator add *authenticator-type/service-id* [*parameters*]
 
-#### Example
+#### Usage Example
 
 ```shell script
 $ conjur config authenticator add authn-oidc/my-idp --provider-uri my-uri --id-token-user-property prop
 ```
+
+#### API Specification
+
+- **URL**
+
+    `/:authenticator/:service_id/:account`
+
+    Example: `/authn-oidc/my-idp/my-company`
+
+- **Method:**
+
+    `POST`
+
+- **URL Parameters:**
+
+  - `:authenticator` - The authenticator type (e.g. authn-k8s, authn-oidc).
+  - `:service_id` - The name of the specific authenticator instance to be created.
+  - `:account` - The Conjur account in which to create the authenticator.
+
+- **Return Value:**
+  
+  The API will return the appropriate HTTP code. If the operation was successful, it will also return the policy yaml that was loaded for the newly created authenticator.
 
 ### Delete Authenticator
 
@@ -93,11 +113,33 @@ Deletes an existing authenticator in Conjur. Deletes the authenticator policy an
 
 conjur config authenticator delete *authenticator-type/service-id*
 
-#### Example
+#### Usage Example
 
 ```shell script
 $ conjur config authenticator delete authn-oidc/my-idp
 ```
+
+#### API Specification
+
+- **URL**
+
+    `/:authenticator/:service_id/:account`
+
+    Example: `/authn-oidc/my-idp/my-company`
+
+- **Method:**
+
+    `DELETE`
+
+- **URL Parameters:**
+
+  - `:authenticator` - The authenticator type (e.g. authn-k8s, authn-oidc).
+  - `:service_id` - The name of the specific authenticator instance to be deleted.
+  - `:account` - The Conjur account in which to delete the authenticator.
+
+- **Return Value:**
+  
+  The API will return the appropriate HTTP code.
 
 ### Update Authenticator
 
@@ -109,11 +151,33 @@ Updates an existing authenticator in Conjur. Updates the authenticator variables
 
 conjur config authenticator update *authenticator-type/service-id* [*parameters*]
 
-#### Example
+#### Usage Example
 
 ```shell script
 $ conjur config authenticator update authn-oidc/my-idp --provider-uri new-uri
 ```
+
+#### API Specification
+
+- **URL**
+
+    `/:authenticator/:service_id/:account`
+
+    Example: `/authn-oidc/my-idp/my-company`
+
+- **Method:**
+
+    `PATCH`
+
+- **URL Parameters:**
+
+  - `:authenticator` - The authenticator type (e.g. authn-k8s, authn-oidc).
+  - `:service_id` - The name of the specific authenticator instance to update.
+  - `:account` - The Conjur account in which to update the authenticator.
+
+- **Return Value:**
+  
+  The API will return the appropriate HTTP code. If the operation was successful, it will also return the update policy yaml of the modified authenticator.
 
 ### Enable Authenticator
 
@@ -125,11 +189,15 @@ Enables an authenticator in the Conjur database (can be overriden by environment
 
 conjur config authenticator enable *authenticator-type/service-id*
 
-#### Example
+#### Usage Example
 
 ```shell script
 $ conjur config authenticator enable authn-oidc/my-idp
 ```
+
+#### API Specification
+
+This already exists, please see the relevant documentation.
 
 ### Disable Authenticator
 
@@ -141,11 +209,20 @@ Disables an authenticator in the Conjur database (can be overriden by environmen
 
 conjur config authenticator disable *authenticator-type/service-id*
 
-#### Example
+#### Usage Example
 
 ```shell script
 $ conjur config authenticator disable authn-oidc/my-idp
 ```
+
+#### API Specification
+
+This already exists, please see the relevant documentation.
+
+## Implementation Details
+
+The new functionality will be developed on the Conjur side. New APIs will be exposed for this new functionality.  
+The CLI will use these new APIs. In order for the CLI to remain up to date with the authenticator types, their required parameters and optional parameters, Conjur will expose an internal API that would provide this authenticator schema information. This API will be called by the CLI whenever this information will be needed. For example, when running `conjur config authenticator add/update {authenticator-type}/{service-id} --help`.
 
 ## Backwards Compatibility
 
@@ -164,53 +241,13 @@ No security implications. These new CLI commands perform the same action, with a
 
 We will need to update the docs of every authenticator, to specify how to use the new CLI commands. In addition, we will need to add documentation for enabling/disabling authenticators.
 
-## Implementation Options
-
-### Alternative 1 - Server Side
-
-The new functionality will be developed on the Conjur side. New APIs will be exposed for this new functionality. For example, in order to add an authenticator, the client will call a `POST` request to `/{authenticator-type}/{service-id}/{account}`. Example:
-
-```shell script
-curl --request POST \
-  --data '{"providerUri": "my-uri", "id-token-user-property": "prop"}' \
-  https://conjur.mycompany.net/authn-oidc/my-authenticator/my-account
-```
-
-The CLI will use these new APIs. In order for the CLI to remain up to date with the authenticator types, their required parameters and optional parameters, Conjur will expose an internal API that would provide this authenticator schema information. This API will be called by the CLI whenever this information will be needed. For example, when running `conjur config authenticator add/update {authenticator-type}/{service-id} --help`.
-
-#### Pros
-
-- Reduces complexity on the client side. Any client can simply leverage the simplified UX, not just Conjur CLI.
-- The feature is decoupled and sealed on the server side. Any change in the underlying infrastructure of the authenticators in the future, will not break the API for the client.
-
-#### Cons
-
-- The new functionality will only be supported from the latest Conjur version where this functionality is added.
-- This solution requires more effort to develop.
-
-### Alternative 2 - CLI Side
-
-The new functionality will be developed on the Conjur CLI side. The CLI will interact with Conjur through the policy, variable and authenticator APIs.
-
-#### Pros
-
-- The solution would work with older Conjur versions. Users would be able to leverage the functionality from day one, without needing to update to the latest Conjur first.
-- This solution requires less effort to develop.
-
-#### Cons
-
-- Increases complexity on the CLI side.
-- Will force the user to work with the Conjur CLI in order to leverage the new functionality.
-- Can potentially increase the technical debt if we chose to switch to another CLI tool.
-
 ## Version Update
 
-Alternative 1 requires Conjur + CLI release.  
-Alternative 2 requires only CLI release.
+This feature requires Conjur + CLI release.
 
 ## Delivery Plan
 
-High level delivery plan for **alternative 1** will include the following steps:
+High level delivery plan includes the following steps:
 
 | Functionality                           | Dev    | Tests  |
 |-----------------------------------------|--------|--------|
@@ -227,22 +264,3 @@ High level delivery plan for **alternative 1** will include the following steps:
 | Documentation                           | 2 days | -      |
   
 **Total: 39 days**
-
-High level delivery plan for **alternative 2** will include the following steps:
-
-| Functionality                     | Dev    | Tests  |
-|-----------------------------------|--------|--------|
-| Adding authenticators in CLI      | 4 days | 2 days |
-| Deleting authenticators in CLI    | 3 days | 2 days |
-| Updating authenticators in CLI    | 2 days | 2 days |
-| Enabling authenticators in CLI    | 1 days | 2 days |
-| Disabling authenticators in CLI   | 1 days | 2 days |
-| Modify deployment examples        | 3 days | -      |
-| Documentation                     | 2 days | -      |
-| Version update                    | 1 day  | -      |
-  
-**Total: 27 days**
-
-## Recommendation
-
-We should develop alternative 1 (server side). The busines logic of the product should be located on the server side and not on the client side. The effort difference is not significant, but the value it offers over alternative 2 is.
